@@ -1,0 +1,86 @@
+// Anti-Rush custom entity
+// -by Outerbeast
+//
+// Getting Started:
+
+// To install Download the package and extract into maps
+
+// Registering the entity
+// - Create a black .as file, name it my_map.as
+// - Open it and add the following code:-
+// #include "anti_rush"
+//
+// void MapInit()
+// {
+//    RegisterAntiRushEntity();
+// }
+//
+// then save
+// - In your map cfg, add the code then save:-
+// map_script my_map
+
+
+@BaseClass = Mandatory
+[
+	ondestroyfn(string) : "OnDestroy Function"
+]
+
+@BaseClass base(Mandatory) = Targetname
+[
+	targetname(target_source) : "Name"
+]
+
+@BaseClass = Target
+[
+	target(target_destination) : "Target"
+]
+
+@BaseClass base(Target) = Targetx
+[
+	delay(string) : "Delay Before Trigger"
+    wait(string) : "Delay before reset"
+	killtarget(target_destination) : "Kill Target"
+]
+
+@BaseClass = Angles
+[
+	angles(string) : "Pitch Yaw Roll (X Y Z)" : "0 0 0"
+]
+
+@BaseClass = RenderFields
+[
+	rendermode(choices) : "Render Mode" : 2 =
+	[
+		0: "Normal"
+		1: "Color"
+		2: "Texture"
+		3: "Glow"
+		4: "Solid"
+		5: "Additive"
+	]
+	renderamt(integer) : "FX Amount (1 - 255)"
+	rendercolor(color255) : "FX Color (R G B)" : "255 0 0"
+]
+
+@PointClass sprite() base(Targetname, Targetx, RenderFields, Angles) size(-4 -4 -4, 4 4 4) color(255 0 0) = anti_rush : "Anti Rush"
+[
+	icon(sprite) : "Icon"
+    master(string) : "Master"
+    percentage(string) : "Percent Required" : 66
+	scale(string) : "Scale" : 0.15
+	icon_drawtype(choices) : "Draw Type / Orientation" =
+	[
+		0: "Default"
+		3: "Parallel"
+		1: "Parallel Upright"
+		5: "Parallel Orientated"
+		2: "Facing Upright"
+		4: "Orientated"
+	]
+    zonecornermin(string) : "Percent Trigger Zone Min (X Y Z)" : "0 0 0"
+	zonecornermax(string) : "Percent Trigger Zone Max (X Y Z)" : "0 0 0"
+    blockercornermin(string) : "Barrier Min (X Y Z)" : "0 0 0"
+	blockercornermax(string) : "Barrier Max (X Y Z)" : "0 0 0"
+    sound(string) : "Sound"
+    fadetime(string) : "Icon Fade Timeout"
+]
