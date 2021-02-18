@@ -6,8 +6,9 @@ anti_rush custom entity for Sven Co-op
 Registering the entity
 - Create a black .as file, name it my_map.as
 - Open it and add the following code:-
-- 
+
 #include "anti_rush"
+
 void MapInit()
 {
    RegisterAntiRushEntity();
