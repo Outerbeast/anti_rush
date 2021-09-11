@@ -19,7 +19,7 @@ then save
 - In your map cfg, add the code then save:-
 `map_script my_map`
 
-# Keys:-
+# Entity Configuration
 
 `"classname" "anti_rush"`
 
