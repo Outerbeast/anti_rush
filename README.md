@@ -20,9 +20,11 @@ then save
 `map_script my_map`
 
 # Keys:-
+
 `"classname" "anti_rush"`
 
 ## Positioning:
+
 `"origin" "x y z"`						- Position of the antirush icon sprite
 
 `"angles" "p y r"`							- Orientation of the icon. Typically you would just change "y"
@@ -38,6 +40,7 @@ then save
 `"blockercornermax" "x2 y2 z2"`			- Blocker wall bounding box, follows same rules for dimensions as the %age trigger zone
 
 ## Logic:
+
 `"targetname" "trigger_antirush"` - Add a targetname if you want something else, eg game_counter to trigger this
 
 `"master" "antirush_master"`				- We can lock the %age trigger zone using this (direct trigger is still allowed)		
@@ -55,6 +58,7 @@ then save
 `"killtarget" "thing(s)_to_delete"`		- Deletes an entity when triggered (Optional)
 
 ## Visuals
+
 `"icon" "sprites/antirush/percent.spr"`	- Sprite to draw (obey env_sprite rules for positioning with origin/angles)- you can use your own sprite, or disable this using "No Icon" flag
 `"sound" "buttons/bell1.wav"`				- Sound to play when the entity is triggered. This can be disabled using "No Sound" flag.
 
@@ -66,12 +70,19 @@ then save
 
 AntiRush icon sprite rendering is done using the standard rendermode, renderamt and rendercolor keys. Below are the default settings:
 `"rendermode" "5"`
+
 `"renderamt" "255"`
+
 `"rendercolor" "255 0 0"` This also affects the border beam coloration
 
 ## Flags
 `"spawnflags" "f"`	- See below for flags for various settings
+
+
 `"1"` - "Start Off": Entity starts inactive, trigger to turn it on
+
 `"2"` - "Don't lock target": Entity will not lock entities who's master keyvalue matches this entity's target, if master exists
+
 `"4"` - "No Sound": Entity will not play a sound when triggered (Alternatively "sound" "sound/null.wav" can be used)
+
 `"8"` - "No Icon" : Disables the antirush icon (Alternatively "icon" "sprites/null.spr" can be used)
