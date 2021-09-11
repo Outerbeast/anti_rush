@@ -24,29 +24,46 @@ then save
 
 ## Positioning:
 `"origin" "x y z"`						- Position of the antirush icon sprite
+
 `"angles" "p y r"`							- Orientation of the icon. Typically you would just change "y"
+
 `"zoneradius" "r"`							- %age trigger zone radius. Default is 512, set value cannot go lower than 16. Radius is used by default if zone bounds are not defined/measured incorrectly
+
 `"zonecornermin" "x1 y1 z1"`				- %age trigger zone bounding box min origin (if you are facing 0 degrees, this is the coords of the lower front right corner of the box)
+
 `"zonecornermax" "x2 y2 z2"`				- Same as above but upper back left corner of the box
+
 `"blockercornermin" "x1 y1 z1"`			- Blocker wall bounding box, follows same rules for dimensions as the %age trigger zone
+
 `"blockercornermax" "x2 y2 z2"`			- Blocker wall bounding box, follows same rules for dimensions as the %age trigger zone
 
 ## Logic:
-`"targetname" "trigger_antirush"`			- Add a targetname if you want something else, eg game_counter to trigger this
-`"master" "antirush_master"`				- We can lock the %age trigger zone using this (direct trigger is still allowed)						
+`"targetname" "trigger_antirush"` - Add a targetname if you want something else, eg game_counter to trigger this
+
+`"master" "antirush_master"`				- We can lock the %age trigger zone using this (direct trigger is still allowed)		
+
 `"netname" "thing_to_target"`				- Triggers an entity when the anti_rush entity spawns and becomes active (Optional)
+
 `"percentage" "66"`						- %age of total players required to trigger. Default is 0 (%age is disabled).
+
 `"target" "thing(s)_to_target_or_unlock"`	- Triggers a target when %age condition is met or triggered directly (this also has the add bonus of unlocking things with	 that match the target)
+
 `"master" antirush_master`- We can lock the %age trigger zone using this (direct trigger is still allowed)
+
 `"lock" "*m;*n;*o"`						- Locks brush entities that use these models
+
 `"killtarget" "thing(s)_to_delete"`		- Deletes an entity when triggered (Optional)
 
 ## Visuals
 `"icon" "sprites/antirush/percent.spr"`	- Sprite to draw (obey env_sprite rules for positioning with origin/angles)- you can use your own sprite, or disable this using "No Icon" flag
 `"sound" "buttons/bell1.wav"`				- Sound to play when the entity is triggered. This can be disabled using "No Sound" flag.
+
 `"borderbeampoints" "a b c;d e f;g h i;"`	- List of points to draw barrier border beams. Minimum is 3 sets of points.
+
 `"sound" "buttons/bell1.wav"`				- Sound to play when the entity is triggered. This can be disabled using "No Sound" flag.
+
 `"borderbeampoints" "a b c;d e f;g h i;"`	- List of points to draw barrier border beams. Minimum is 3 sets of points.
+
 AntiRush icon sprite rendering is done using the standard rendermode, renderamt and rendercolor keys. Below are the default settings:
 `"rendermode" "5"`
 `"renderamt" "255"`
