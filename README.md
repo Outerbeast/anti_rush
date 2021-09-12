@@ -51,9 +51,9 @@ then save
 
 `"target" "thing(s)_to_target_or_unlock"`	- Triggers a target when %age condition is met or triggered directly (this also has the add bonus of unlocking things with	 that match the target)
 
-`"master" antirush_master`- We can lock the %age trigger zone using this (direct trigger is still allowed)
+`"master" "antirush_master"`- We can lock the %age trigger zone using this (direct trigger is still allowed)
 
-`"lock" "*m;*n;*o"`						- Locks brush entities that use these models
+`"lock" "*m;*n;*o"`						- Locks brush entities that use these models (Only locks trigger_s and func_s)
 
 `"killtarget" "thing(s)_to_delete"`		- Deletes an entity when triggered (Optional)
 
