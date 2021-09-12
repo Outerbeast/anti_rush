@@ -2,7 +2,7 @@
 
 # Getting Started:
 
-To install Download the package and extract into maps
+To install download the package from the "Releases" section on the right and extract into maps
 
 Registering the entity
 - Create a blank .as file, name it my_map.as
