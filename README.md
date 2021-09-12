@@ -62,11 +62,9 @@ then save
 `"icon" "sprites/antirush/percent.spr"`	- Sprite to draw (obey env_sprite rules for positioning with origin/angles)- you can use your own sprite, or disable this using "No Icon" flag
 `"sound" "buttons/bell1.wav"`				- Sound to play when the entity is triggered. This can be disabled using "No Sound" flag.
 
-`"borderbeampoints" "a b c;d e f;g h i;"`	- List of points to draw barrier border beams. Minimum is 3 sets of points.
-
 `"sound" "buttons/bell1.wav"`				- Sound to play when the entity is triggered. This can be disabled using "No Sound" flag.
 
-`"borderbeampoints" "a b c;d e f;g h i;"`	- List of points to draw barrier border beams. Minimum is 3 sets of points.
+`"borderbeampoints" "a b c;d e f;g h i"`	- List of points to draw barrier border beams. Minimum is 3 sets of points.
 
 AntiRush icon sprite rendering is done using the standard rendermode, renderamt and rendercolor keys. Below are the default settings:
 `"rendermode" "5"`
