@@ -60,7 +60,6 @@ then save
 ## Visuals
 
 `"icon" "sprites/antirush/percent.spr"`	- Sprite to draw (obey env_sprite rules for positioning with origin/angles)- you can use your own sprite, or disable this using "No Icon" flag
-`"sound" "buttons/bell1.wav"`				- Sound to play when the entity is triggered. This can be disabled using "No Sound" flag.
 
 `"sound" "buttons/bell1.wav"`				- Sound to play when the entity is triggered. This can be disabled using "No Sound" flag.
 
