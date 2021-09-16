@@ -14,9 +14,7 @@ enum antirush_modes
     SOLO,           // Disable AntiRush in single player
 };
 
-const uint OverrideSetting  = DEFAULT; // Override the map setting for AntiRush. See "antirush_modes" enum for possible options
-const string DefaultIcon    = "sprites/antirush/percent.spr";
-const string DefaultSound   = "buttons/bell1.wav";
+const uint OverrideSetting  = FORCE_ON; // Override the map setting for AntiRush. See "antirush_modes" enum for possible options
 
 enum antirush_flags
 {
@@ -124,7 +122,8 @@ class anti_rush : ScriptBaseEntity // Need a ScriptBaseToggleEntity baseclass pl
     private EHandle hAntiRushIcon, hAntiRushLock;
     private array<EHandle> H_ANTIRUSH_BORDER_BEAMS;
 
-    private string strIcon = DefaultIcon, strSound = DefaultSound, strMaster, strKillTarget, strLockEnts, strBorderBeamPoints;
+    private string strIcon = "sprites/antirush/percent.spr", strSound = "buttons/bell1.wav";
+    private string strMaster, strKillTarget, strLockEnts, strBorderBeamPoints;
 
     private Vector vecZoneCornerMin, vecZoneCornerMax, vecBlockerCornerMin, vecBlockerCornerMax;
 
@@ -286,7 +285,7 @@ class anti_rush : ScriptBaseEntity // Need a ScriptBaseToggleEntity baseclass pl
         self.pev.solid = SOLID_BBOX;
 
         g_EntityFuncs.SetOrigin( self, self.pev.origin );
-		g_EntityFuncs.SetSize( self.pev, self.pev.mins, self.pev.maxs );
+        g_EntityFuncs.SetSize( self.pev, self.pev.mins, self.pev.maxs );
 
         return( self.pev.solid == SOLID_BBOX );
     }
@@ -362,21 +361,21 @@ class anti_rush : ScriptBaseEntity // Need a ScriptBaseToggleEntity baseclass pl
             }
         }
         
-        if( iPlayersAlive < 1 )
-            return;
-
-        const float flCurrentPercent = float( iPlayersInZone ) / float( iPlayersAlive ) + 0.00001f;
-        const float flRequiredPercent = self.pev.frame / 100.0f;
-
-        if( flCurrentPercent >= flRequiredPercent )
+        if( iPlayersAlive >= 1 )
         {
-            self.Use( self, self, USE_ON );
-            self.pev.nextthink = 0.0f; // We are done here, stop thinking
-            return;
+            const float flCurrentPercent = float( iPlayersInZone ) / float( iPlayersAlive ) + 0.00001f;
+            const float flRequiredPercent = self.pev.frame / 100.0f;
+
+            if( flCurrentPercent >= flRequiredPercent )
+            {
+                self.Use( self, self, USE_ON );
+                self.pev.nextthink = 0.0f; // We are done here, stop thinking
+                return;
+            }
         }
 
         self.pev.nextthink = g_Engine.time + 0.5f;
-	}
+    }
     // Main triggering business
     void Use(CBaseEntity@ pActivator, CBaseEntity@ pCaller, USE_TYPE useType, float value)
     {
