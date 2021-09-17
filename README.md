@@ -51,8 +51,6 @@ then save
 
 `"target" "thing(s)_to_target_or_unlock"`	- Triggers a target when %age condition is met or triggered directly (this also has the add bonus of unlocking things with	 that match the target)
 
-`"master" "antirush_master"`- We can lock the %age trigger zone using this (direct trigger is still allowed)
-
 `"lock" "*m;*n;*o"`						- Locks brush entities that use these models (Only locks trigger_s and func_s)
 
 `"killtarget" "thing(s)_to_delete"`		- Deletes an entity when triggered (Optional)
@@ -66,6 +64,7 @@ then save
 `"borderbeampoints" "a b c;d e f;g h i"`	- List of points to draw barrier border beams. Minimum is 3 sets of points.
 
 AntiRush icon sprite rendering is done using the standard rendermode, renderamt and rendercolor keys. Below are the default settings:
+
 `"rendermode" "5"`
 
 `"renderamt" "255"`
