@@ -14,7 +14,7 @@ enum antirush_modes
     SOLO,           // Disable AntiRush in single player
 };
 
-const uint OverrideSetting  = FORCE_ON; // Override the map setting for AntiRush. See "antirush_modes" enum for possible options
+const uint OverrideSetting  = DEFAULT; // Override the map setting for AntiRush. See "antirush_modes" enum for possible options
 
 enum antirush_flags
 {
