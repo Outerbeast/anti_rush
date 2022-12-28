@@ -31,7 +31,7 @@ then save
 | Angles | `"angles" "p y r"` | Orientation of the icon. Typically you would just change "y" |
 | Zone Radius | `"zoneradius" "r"` | %age trigger zone radius. Default is 512, set value cannot go lower than 16. Radius is used by default if zone bounds are not set/measured incorrectly |
 | Percent Trigger Zone Min (X Y Z) | `"zonecornermin" "x1 y1 z1"` | %age trigger zone bounding box min origin (if you are facing 0 degrees, this is the coords of the lower front right corner of the box) |
-| Percent Trigger Zone Max (X Y Z) | Same as above but upper back left corner of the box |
+| Percent Trigger Zone Max (X Y Z) | `"zonecornermax" "x2 y2 z2"` | Same as above but upper back left corner of the box |
 | Barrier Min (X Y Z) | `"blockercornermin" "x1 y1 z1"` | Blocker wall bounding box, follows same rules for dimensions as the %age trigger zone |
 | Barrier Max (X Y Z) |`"blockercornermax" "x2 y2 z2"` | Blocker wall bounding box, follows same rules for dimensions as the %age trigger zone |
 
