@@ -1,6 +1,6 @@
-/* anti_rush Entity Version 1.0
+/* anti_rush Entity Version 1.1
 by Outerbeast
-Custom entity for percentage player condition requirements for level progression
+Custom entity for creating percentage player condition requirements for level progression
 For install and usage instructions, see anti_rush.fgd
 */
 namespace ANTI_RUSH
@@ -11,19 +11,21 @@ enum antirush_modes
     DEFAULT = 0,    // Let the map control AntiRush mode
     FORCE_ON,       // Have AntiRush enabled for all (supported) levels
     FORCE_OFF,      // Force AntiRush disabled for all (supported) levels
-    SOLO,           // Disable AntiRush in single player
+    SOLO          // Disable AntiRush in single player
 };
-
-const uint OverrideSetting  = DEFAULT; // Override the map setting for AntiRush. See "antirush_modes" enum for possible options
 
 enum antirush_flags
 {
-    START_OFF   = 1 << 0,
-    NO_MS       = 1 << 1,
-    NO_SOUND    = 1 << 2,
-    NO_ICON     = 1 << 3
+    SF_START_OFF        = 1 << 0,
+    SF_NO_MS            = 1 << 1,
+    SF_NO_SOUND         = 1 << 2,
+    SF_NO_ICON          = 1 << 3,
+    SF_REMEMBER_PLAYER  = 1 << 4
 };
 
+array<EHandle> H_AR_ENTITIES;
+
+const uint OverrideSetting = FORCE_ON; // Override the map setting for AntiRush. See "antirush_modes" enum for possible options
 string RemoveEntities;
 
 bool IsActive()
@@ -62,8 +64,6 @@ bool EntityRegister(bool blEnable = true, uint iAntiRushMode = OverrideSetting)
         {
             if( blEnable )
                 g_CustomEntityFuncs.RegisterCustomEntity( "ANTI_RUSH::anti_rush", "anti_rush" );
-
-            break;
         }
     }
 
@@ -75,18 +75,17 @@ bool EntityRegister(bool blEnable = true, uint iAntiRushMode = OverrideSetting)
     return g_CustomEntityFuncs.IsCustomEntity( "anti_rush" );
 }
 // Use preconfigured antirush entities
-void ARLoadEnts(string strCustomFile)
+bool ARLoadEnts(string strCustomFile)
 {
     if( !IsActive() )
-        return;
+        return false;
     
     const string strAntiRushFile = strCustomFile == "" ? "store/antirush/" + string( g_Engine.mapname ) + ".antirush" : strCustomFile;
     // This check is not critical. Only doing this so to avoid "file doesn't exist" warnings filling the logs.
     if( g_FileSystem.OpenFile( "scripts/maps/" + strAntiRushFile, OpenFile::READ ) is null )
-        return;
+        return false;
 
-    g_EntityLoader.LoadFromFile( strAntiRushFile );
-    g_EngineFuncs.ServerPrint( "anti_rush: Loaded antirush config- " + "scripts/maps/" + strAntiRushFile + "\n" );
+    return g_EntityLoader.LoadFromFile( strAntiRushFile );
 }
 // Routine for cleaning up antirush remnant entities when disabled - call in MapStart(). Wildcards supported
 void AREntityRemove(string strAntiRushRemoveList)
@@ -103,7 +102,7 @@ void AREntityRemove(string strAntiRushRemoveList)
     {
         if( STR_ANTIRUSH_REMOVE_LST[i] == "" )
             continue;
-        
+
         CBaseEntity@ pEntity;
 
         while( ( @pEntity = g_EntityFuncs.FindEntityByTargetname( pEntity, STR_ANTIRUSH_REMOVE_LST[i] ) ) !is null )
@@ -117,28 +116,32 @@ void AREntityRemove(string strAntiRushRemoveList)
     }
 }
 
-class anti_rush : ScriptBaseEntity // Need a ScriptBaseToggleEntity baseclass please.
+final class anti_rush : ScriptBaseEntity // Need a ScriptBaseToggleEntity baseclass please.
 {
     private EHandle hAntiRushIcon, hAntiRushLock;
     private array<EHandle> H_ANTIRUSH_BORDER_BEAMS;
+    
+    private CSprite@ pAntiRushIcon
+    {
+        get { return hAntiRushIcon ? cast<CSprite@>( hAntiRushIcon.GetEntity() ) : null; }
+        set { hAntiRushIcon = EHandle( @value ); }
+    }
 
-    private string strIcon = "sprites/antirush/percent.spr", strSound = "buttons/bell1.wav";
-    private string strMaster, strKillTarget, strLockEnts, strBorderBeamPoints;
+    private CScheduledFunction@ fnTriggerBlocked, fnKillTarget, fnIconFade, fnBorderFade;
 
+    private string strAntiRushIcon, strMaster, strKillTarget, strLockEnts, strBorderBeamPoints;
     private Vector vecZoneCornerMin, vecZoneCornerMax, vecBlockerCornerMin, vecBlockerCornerMax;
-
-    private float flTargetDelay, flFadeTime = 5.0f, flZoneRadius = 512.0f;
-
-    private uint8 iVpType = 0;
-
+    private float
+        flTargetDelay,
+        flFadeTime = 5.0f,
+        flZoneRadius = 512.0f;
+    private uint8 iVpType;
     private bool blInitialised, blAntiRushBarrier;
 
     bool KeyValue(const string& in szKey, const string& in szValue)
     {
         if( szKey == "icon" )
-            strIcon = szValue;
-        else if( szKey == "sound" )
-            strSound = szValue;
+            strAntiRushIcon = szValue;
         else if( szKey == "icon_drawtype" )
             iVpType = atoui( szValue );
         else if( szKey == "master" )// This should be a standard CBaseEntity property!!
@@ -173,14 +176,19 @@ class anti_rush : ScriptBaseEntity // Need a ScriptBaseToggleEntity baseclass pl
 	
     void Precache()
     {
-        g_Game.PrecacheModel( strIcon );
-        g_Game.PrecacheGeneric( strIcon );
+        if( strAntiRushIcon == "" )
+            strAntiRushIcon = "sprites/antirush/percent.spr";
+
+        if( self.pev.noise == "" )
+            self.pev.noise = "buttons/bell1.wav";
+    
+        g_Game.PrecacheModel( strAntiRushIcon );
+        g_Game.PrecacheGeneric( strAntiRushIcon );
 
         g_Game.PrecacheModel( "sprites/laserbeam.spr" );
-        g_Game.PrecacheGeneric( "sprites/laserbeam.spr" );
 
-        g_SoundSystem.PrecacheSound( strSound );
-        g_Game.PrecacheGeneric( strSound );
+        g_SoundSystem.PrecacheSound( self.pev.noise );
+        g_Game.PrecacheGeneric( "sound/" + self.pev.noise );
 
         BaseClass.Precache();
     }
@@ -193,16 +201,24 @@ class anti_rush : ScriptBaseEntity // Need a ScriptBaseToggleEntity baseclass pl
         self.pev.effects    |= EF_NODRAW;
         g_EntityFuncs.SetOrigin( self, self.pev.origin );
 
-        if( !self.pev.SpawnFlagBitSet( START_OFF ) )
-            blInitialised = Initialise();
-
         BaseClass.Spawn();
+    }
+
+    void PostSpawn()
+    {   
+        if( !self.pev.SpawnFlagBitSet( SF_START_OFF ) )
+            blInitialised = Initialise();
+        // If set, entity will trigger "netname" when it spawns
+        if( self.pev.netname != "" && self.pev.netname != self.GetTargetname() )
+            g_EntityFuncs.FireTargets( "" + self.pev.netname, self, self, USE_TOGGLE, 0.0f, 0.5f );
+
+        H_AR_ENTITIES.insertLast( self );
     }
     // Configuring the settings for each antirush component
     bool Initialise()
     {
-        if( !self.pev.SpawnFlagBitSet( NO_ICON ) )
-            hAntiRushIcon = CreateIcon();
+        if( !self.pev.SpawnFlagBitSet( SF_NO_ICON ) )
+            CreateIcon();
 
         if( vecBlockerCornerMin != g_vecZero && 
             vecBlockerCornerMax != g_vecZero && 
@@ -210,27 +226,28 @@ class anti_rush : ScriptBaseEntity // Need a ScriptBaseToggleEntity baseclass pl
             blAntiRushBarrier = CreateBarrier();
 
         if( self.pev.target != "" || strLockEnts != "" )
+        {
             hAntiRushLock = CreateLock();
 
+            if( hAntiRushLock )
+                @hAntiRushLock.GetEntity().pev.owner = self.edict();
+        }
+
         if( strBorderBeamPoints != "" )
-            DrawBorder();
+            H_ANTIRUSH_BORDER_BEAMS = DrawBorder();
 
+        self.pev.spawnflags &= ~SF_START_OFF;
         self.pev.nextthink = self.pev.frame >= 0.01f ? g_Engine.time + 5.0f : 0.0f;
-        // If set, entity will trigger "netname" when it spawns
-        if( self.pev.netname != "" && self.pev.netname != self.GetTargetname() )
-            g_EntityFuncs.FireTargets( "" + self.pev.netname, self, self, USE_TOGGLE, 0.0f, 0.5f );
-
-        self.pev.spawnflags &= ~START_OFF;
         
-        return( hAntiRushIcon.IsValid() || 
+        return( pAntiRushIcon !is null || 
                 hAntiRushLock.IsValid() ||
                 blAntiRushBarrier ||
                 self.pev.nextthink > g_Engine.time );
     }
     // Auxilliary entities required for antirush logic
-    EHandle CreateIcon()
+    bool CreateIcon()
     {
-        CSprite@ pAntiRushIcon = g_EntityFuncs.CreateSprite( strIcon, self.GetOrigin(), false, 0.0f );
+        @pAntiRushIcon = g_EntityFuncs.CreateSprite( strAntiRushIcon, self.pev.origin, false, 0.0f );
         g_EntityFuncs.DispatchKeyValue( pAntiRushIcon.edict(), "vp_type", iVpType );
         pAntiRushIcon.SetScale( self.pev.scale <= 0.0f ? 0.15f : self.pev.scale );
         pAntiRushIcon.pev.nextthink     = 0.0f;
@@ -239,21 +256,22 @@ class anti_rush : ScriptBaseEntity // Need a ScriptBaseToggleEntity baseclass pl
         pAntiRushIcon.pev.rendermode    = self.pev.rendermode == kRenderFxNone ? int( kRenderTransTexture ) : self.pev.rendermode; // Using the enums here instead thows exception: "Can't implicitly convert from 'int' to 'RenderModes'" - wtf?
         pAntiRushIcon.pev.renderamt     = self.pev.renderamt == 0.0f ? 255.0f : self.pev.renderamt;
         pAntiRushIcon.pev.rendercolor   = self.pev.rendercolor == g_vecZero ? Vector( 255, 0, 0 ) : self.pev.rendercolor;
+        @pAntiRushIcon.pev.owner        = self.edict();
 
-        return EHandle( pAntiRushIcon );
+        return pAntiRushIcon !is null;
     }
 
     EHandle CreateLock()
     {
         if( ( strMaster != "" && self.pev.target == strMaster ) || 
             ( self.GetTargetname() != "" && self.pev.target == self.GetTargetname() ) ||
-            ( self.pev.SpawnFlagBitSet( NO_MS ) && strLockEnts == "" ) )
-            return EHandle( null );
+            ( self.pev.SpawnFlagBitSet( SF_NO_MS ) && strLockEnts == "" ) )
+            return EHandle();
             
         if( strLockEnts != "" )
         {
             if( self.pev.target == "" )
-                self.pev.target = "" + self.GetClassname() + "_ent_ID" + self.entindex();
+                self.pev.target = "" + self.GetClassname() + "_ent_ID" + self.edict().serialnumber;
 
             const array<string> STR_LOCK_ENTS = strLockEnts.Split( ";" );
 
@@ -274,28 +292,28 @@ class anti_rush : ScriptBaseEntity // Need a ScriptBaseToggleEntity baseclass pl
             }
         }
 
-        dictionary ms = { { "targetname", "" + self.pev.target } };
-        return EHandle( g_EntityFuncs.CreateEntity( "multisource", ms, true ) );
+        return g_EntityFuncs.CreateEntity( "multisource", {{ "targetname", "" + self.pev.target }} );
     }
 
     bool CreateBarrier()
     {
-        self.pev.mins = vecBlockerCornerMin - self.GetOrigin();
-        self.pev.maxs = vecBlockerCornerMax - self.GetOrigin();
+        self.pev.mins = vecBlockerCornerMin - self.pev.origin;
+        self.pev.maxs = vecBlockerCornerMax - self.pev.origin;
         self.pev.solid = SOLID_BBOX;
 
         g_EntityFuncs.SetOrigin( self, self.pev.origin );
         g_EntityFuncs.SetSize( self.pev, self.pev.mins, self.pev.maxs );
 
-        return( self.pev.solid == SOLID_BBOX );
+        return self.pev.solid == SOLID_BBOX;
     }
 
-    uint DrawBorder()
+    array<EHandle>@ DrawBorder()
     {
+        array<EHandle> H_BEAMS_OUT;
         const array<string> STR_BEAM_POINTS = strBorderBeamPoints.Split( ";" );
         // No such thing as a 2-sided shape.
         if( STR_BEAM_POINTS.length() < 3 )
-            return 0;
+            return array<EHandle>();
 
         Vector vecStartPos, vecEndPos;
 
@@ -317,11 +335,12 @@ class anti_rush : ScriptBaseEntity // Need a ScriptBaseToggleEntity baseclass pl
             pBorderBeam.SetBrightness( 128 );
             pBorderBeam.SetScrollRate( 100 );
             pBorderBeam.pev.rendercolor = self.pev.rendercolor == g_vecZero ? Vector( 255, 0, 0 ) : self.pev.rendercolor;
+            @pBorderBeam.pev.owner = self.edict();
 
-            H_ANTIRUSH_BORDER_BEAMS.insertLast( EHandle( pBorderBeam ) );
+            H_BEAMS_OUT.insertLast( EHandle( pBorderBeam ) );
         }
 
-        return( H_ANTIRUSH_BORDER_BEAMS.length() );
+        return @H_BEAMS_OUT;
     }
     // Calculate percentage of players in the zone
     void Think()
@@ -335,46 +354,61 @@ class anti_rush : ScriptBaseEntity // Need a ScriptBaseToggleEntity baseclass pl
             return;
         }
         
-        uint iPlayersAlive = 0, iPlayersInZone = 0;
-        // Yeah. No method CPlayerFuncs method "int GetNumPlayersAlive". WHY.
-        for( int playerID = 1; playerID <= g_PlayerFuncs.GetNumPlayers(); playerID++ )
+        uint 
+            iPlayersAlive = 0,
+            iPlayersInZone = 0;
+
+        for( int iPlayer = 1; iPlayer <= g_Engine.maxClients; iPlayer++ )
         {
-            CBasePlayer@ pPlayer = g_PlayerFuncs.FindPlayerByIndex( playerID );
+            CBasePlayer@ pPlayer = g_PlayerFuncs.FindPlayerByIndex( iPlayer );
             
             if( pPlayer is null || !pPlayer.IsConnected() || !pPlayer.IsAlive() )
+            {
+                self.pev.iuser1 &= ~( 1 << ( iPlayer & 31 ) );
                 continue;
+            }
             
-            ++iPlayersAlive;
-            // Check if player is within these bounds
-            if( vecZoneCornerMin != g_vecZero && vecZoneCornerMax != g_vecZero && vecZoneCornerMin != vecZoneCornerMax )
-            {   // No EntityFuncs "bool EntityInBounds" method. Piss off.
-                if( ( pPlayer.pev.origin.x >= vecZoneCornerMin.x && pPlayer.pev.origin.x <= vecZoneCornerMax.x ) &&
-                    ( pPlayer.pev.origin.y >= vecZoneCornerMin.y && pPlayer.pev.origin.y <= vecZoneCornerMax.y ) &&
-                    ( pPlayer.pev.origin.z >= vecZoneCornerMin.z && pPlayer.pev.origin.z <= vecZoneCornerMax.z ) )
-                    ++iPlayersInZone;
+            iPlayersAlive++;
+
+            const bool blPlayerInZone = vecZoneCornerMin != g_vecZero && vecZoneCornerMax != g_vecZero && vecZoneCornerMin != vecZoneCornerMax ?
+                                        ( pPlayer.pev.origin.x >= vecZoneCornerMin.x && pPlayer.pev.origin.x <= vecZoneCornerMax.x ) &&
+                                        ( pPlayer.pev.origin.y >= vecZoneCornerMin.y && pPlayer.pev.origin.y <= vecZoneCornerMax.y ) &&
+                                        ( pPlayer.pev.origin.z >= vecZoneCornerMin.z && pPlayer.pev.origin.z <= vecZoneCornerMax.z ) :
+                                        ( self.pev.origin - pPlayer.pev.origin ).Length() <= flZoneRadius && self.FVisibleFromPos( pPlayer.pev.origin, self.pev.origin );
+
+            if( blPlayerInZone )
+            {
+                @fnTriggerBlocked = self.pev.message != "" && self.pev.message != self.GetTargetname() && self.pev.iuser1 & 1 << ( iPlayer & 31 ) == 0 ? 
+                                    g_Scheduler.SetTimeout( this, "TriggerBlocked", 0.0f, EHandle( pPlayer ) ) : null;
+
+                self.pev.iuser1 |= 1 << ( iPlayer & 31 );
+                iPlayersInZone++;
             }
-            else// Check if a player is within a radius instead, if no bounding box is defined
-            {   // No EntityFuncs "bool EntityInRadius" method either, starting to question sanity
-                if( ( self.pev.origin - pPlayer.pev.origin ).Length() <= flZoneRadius && 
-                    self.FVisibleFromPos( pPlayer.pev.origin, self.pev.origin ) )
-                    ++iPlayersInZone;
-            }
+            else if( self.pev.iuser1 & 1 << ( iPlayer & 31 ) != 0 && self.pev.SpawnFlagBitSet( SF_REMEMBER_PLAYER ) )
+                iPlayersInZone++;
         }
         
         if( iPlayersAlive >= 1 )
         {
-            const float flCurrentPercent = float( iPlayersInZone ) / float( iPlayersAlive ) + 0.00001f;
-            const float flRequiredPercent = self.pev.frame / 100.0f;
+            const float
+                flCurrentPercent = float( iPlayersInZone ) / float( iPlayersAlive ) + 0.00001f,
+                flRequiredPercent = self.pev.frame / 100.0f;
 
             if( flCurrentPercent >= flRequiredPercent )
             {
+                g_Scheduler.RemoveTimer( fnTriggerBlocked );
                 self.Use( self, self, USE_ON );
-                self.pev.nextthink = 0.0f; // We are done here, stop thinking
+                self.pev.nextthink = 0.0f;// We are done here, stop thinking
                 return;
             }
         }
 
         self.pev.nextthink = g_Engine.time + 0.5f;
+    }
+
+    void TriggerBlocked(EHandle hActivator)
+    {
+        g_EntityFuncs.FireTargets( self.pev.message, hActivator ? hActivator.GetEntity() : null, self, USE_ON, 0.0f, 0.0f );
     }
     // Main triggering business
     void Use(CBaseEntity@ pActivator, CBaseEntity@ pCaller, USE_TYPE useType, float value)
@@ -385,27 +419,26 @@ class anti_rush : ScriptBaseEntity // Need a ScriptBaseToggleEntity baseclass pl
             return;
         }
         
-        if( !self.pev.SpawnFlagBitSet( NO_SOUND ) )
-            g_SoundSystem.EmitSound( self.edict(), CHAN_ITEM, strSound, 0.5f, ATTN_NORM );
+        if( !self.pev.SpawnFlagBitSet( SF_NO_SOUND ) )
+            g_SoundSystem.EmitSound( self.edict(), CHAN_ITEM, self.pev.noise, 0.5f, ATTN_NORM );
 
-        if( hAntiRushIcon )
+        if( pAntiRushIcon !is null )
         {
-            CSprite@ pAntiRushIcon = cast<CSprite@>( hAntiRushIcon.GetEntity() );
             pAntiRushIcon.SetColor( 0, 255, 0 );
             // !-BUG-!: CSprite method "float Frames() const" doesn't work. This is the current workaround.
-            int iAntiRushIconFrames = Math.max( 0, g_EngineFuncs.ModelFrames( g_EngineFuncs.ModelIndex( pAntiRushIcon.pev.model ) ) - 1 );
+            const int iAntiRushIconFrames = Math.max( 0, g_EngineFuncs.ModelFrames( g_EngineFuncs.ModelIndex( pAntiRushIcon.pev.model ) ) - 1 );
             // Change the icon to display 100% when applicable
             if( self.pev.frame > 0.0f && iAntiRushIconFrames >= 100 )
                 pAntiRushIcon.pev.frame = 100.0f;
 
             if( flFadeTime > 0 )
-                g_Scheduler.SetTimeout( this, "RemoveIcon", flFadeTime );
+                @fnIconFade = g_Scheduler.SetTimeout( this, "RemoveIcon", flFadeTime );
         }
 
         if( blAntiRushBarrier )
         {
             self.pev.solid = SOLID_NOT;
-            blAntiRushBarrier = false;
+            blAntiRushBarrier = self.pev.solid == SOLID_BBOX;
         }
 
         if( H_ANTIRUSH_BORDER_BEAMS.length() > 1 )
@@ -419,31 +452,38 @@ class anti_rush : ScriptBaseEntity // Need a ScriptBaseToggleEntity baseclass pl
             }
 
             if( flFadeTime > 0 )
-                g_Scheduler.SetTimeout( this, "RemoveBorder", flFadeTime + 5.0f );
+                @fnBorderFade = g_Scheduler.SetTimeout( this, "RemoveBorder", flFadeTime + 5.0f );
         }
-        // Have to delay killtarget as well, else FireTargets would replace the scheduled function for delay
-        g_Scheduler.SetTimeout( this, "TriggerTargets", flTargetDelay, EHandle( pActivator ), EHandle( pCaller ) );
-    }
-
-    void TriggerTargets(EHandle hActivator, EHandle hCaller)
-    {
-        CBaseEntity@ pActivator = hActivator ? hActivator.GetEntity() : ( hCaller ? hCaller.GetEntity() : self );
 
         if( self.pev.target != "" && self.pev.target != self.GetTargetname() )
-            self.SUB_UseTargets( pActivator, USE_TOGGLE, 0.0f );
-        // !-BUG-!: USE_KILL doesn't delete the entity(s), just triggers it. Forced to delete manually.
+            g_EntityFuncs.FireTargets( string( self.pev.target ), pActivator, pCaller, USE_TOGGLE, 0.0f, flTargetDelay );
+
         if( strKillTarget != "" && strKillTarget != self.GetTargetname() )
+            KillTarget( strKillTarget, flTargetDelay );
+    }
+
+    void KillTarget(string strTargetname, float flDelay)
+    {
+        if( strTargetname == "" )
+            return;
+
+        if( flDelay > 0.0f )
         {
-            do
-                g_EntityFuncs.Remove( g_EntityFuncs.FindEntityByTargetname( null, strKillTarget ) );
-            while( g_EntityFuncs.FindEntityByTargetname( null, strKillTarget ) !is null );
+            @fnKillTarget = g_Scheduler.SetTimeout( this, "KillTarget", flDelay, strTargetname, 0.0f );
+            return;
         }
+        
+        do( g_EntityFuncs.Remove( g_EntityFuncs.FindEntityByTargetname( null, strTargetname ) ) );
+        while( g_EntityFuncs.FindEntityByTargetname( null, strTargetname ) !is null );
     }
 
     void RemoveIcon()
     {
-        if( hAntiRushIcon )
-            g_EntityFuncs.Remove( hAntiRushIcon.GetEntity() );
+        if( pAntiRushIcon !is null )
+            g_EntityFuncs.Remove( pAntiRushIcon );
+
+        if( fnIconFade !is null )
+            g_Scheduler.RemoveTimer( fnIconFade );
     }
 
     void RemoveBorder()
@@ -455,6 +495,9 @@ class anti_rush : ScriptBaseEntity // Need a ScriptBaseToggleEntity baseclass pl
 
             g_EntityFuncs.Remove( H_ANTIRUSH_BORDER_BEAMS[i].GetEntity() );
         }
+
+        if( fnBorderFade !is null )
+            g_Scheduler.RemoveTimer( fnBorderFade );
     }
 
     void UpdateOnRemove()
@@ -465,9 +508,15 @@ class anti_rush : ScriptBaseEntity // Need a ScriptBaseToggleEntity baseclass pl
         if( hAntiRushLock )
             g_EntityFuncs.Remove( hAntiRushLock.GetEntity() );
 
+        if( fnKillTarget !is null )
+            g_Scheduler.RemoveTimer( fnKillTarget );
+
+        if( fnTriggerBlocked !is null )
+            g_Scheduler.RemoveTimer( fnTriggerBlocked );
+
         BaseClass.UpdateOnRemove();
     }
-}
+};
 
 }
 /* Special Thanks to:-
