@@ -5,7 +5,7 @@
 To install, download the package from the "Releases" section on the right and extract into `svencoop_addon`
 [Download link](https://github.com/Outerbeast/anti_rush/releases/download/v1.1/anti_rush_v1.1.zip)
 
-Registering the entity
+## Registering the entity
 - Create a blank .as file, name it my_map.as
 - Open it and add the following code:-
 ```
