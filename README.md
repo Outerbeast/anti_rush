@@ -1,5 +1,5 @@
 # anti_rush
-![alt text](https://github.com/Outerbeast/anti_rush/blob/main/preview.jpg?raw=true)
+![alt text](https://github.com/Outerbeast/anti_rush/blob/main/preview.jpg)
 # Getting Started:
 
 To install, download the package from the "Releases" section on the right and extract into `svencoop_addon`
