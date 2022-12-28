@@ -1,5 +1,5 @@
 # anti_rush
-
+![alt text](https://github.com/Outerbeast/anti_rush/blob/main/preview.png?raw=true)
 # Getting Started:
 
 To install download the package from the "Releases" section on the right and extract into maps
@@ -71,4 +71,4 @@ AntiRush icon sprite rendering is done using the standard rendermode, renderamt 
 | Don't lock target | `2` | Entity will not lock entities who's master keyvalue matches this entity's target, if master exists. Entities locked via `lock` key are unaffected. |
 | No Sound | `4` | Entity will not play a sound when triggered (Alternatively "sound" "sound/null.wav" can be used). |
 | No Icon | `8` | Disables the antirush icon (Alternatively "icon" "sprites/null.spr" can be used) |
-| Remember Player | 16 | Players who already reached the zone then leave the zone afterwards will still be counted towards the %age |
+| Remember Player | `16` | Players who already reached the zone then leave the zone afterwards will still be counted towards the %age |
