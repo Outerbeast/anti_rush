@@ -2,7 +2,8 @@
 ![alt text](https://github.com/Outerbeast/anti_rush/blob/main/preview.jpg?raw=true)
 # Getting Started:
 
-To install download the package from the "Releases" section on the right and extract into maps
+To install, download the package from the "Releases" section on the right and extract into `svencoop_addon`
+[Download link](https://github.com/Outerbeast/anti_rush/releases/download/v1.1/anti_rush_v1.1.zip)
 
 Registering the entity
 - Create a blank .as file, name it my_map.as
