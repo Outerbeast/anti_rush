@@ -25,7 +25,7 @@ enum antirush_flags
 
 array<EHandle> H_AR_ENTITIES;
 
-const uint OverrideSetting = FORCE_ON; // Override the map setting for AntiRush. See "antirush_modes" enum for possible options
+const uint OverrideSetting = DEFAULT; // Override the map setting for AntiRush. See "antirush_modes" enum for possible options
 string RemoveEntities;
 
 bool IsActive()
