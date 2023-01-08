@@ -65,6 +65,8 @@ AntiRush icon sprite rendering is done using the standard rendermode, renderamt 
 
 `"rendercolor" "255 0 0"` This also affects the border beam coloration
 
+Note that the render settings will not change via env_render or other means.
+
 ## Flags
 | Name | Value `"spawnflags" "f"` | Description |
 | ----| :---: | -------- |
